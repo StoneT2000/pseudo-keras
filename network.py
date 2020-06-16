@@ -93,8 +93,8 @@ class Network:
         train_data = train_data[:-validation_size]
         train_labels = train_labels[:-validation_size]
 
-        evaluation_cost, evaluation_accuracy = [], []
-        training_cost, training_accuracy = [], []
+        val_loss_hist, val_accuracy_hist = [], []
+        training_loss_hist, training_accuracy_hist = [], []
 
         stime = time.time()
         for epoch in range(epochs):
@@ -115,8 +115,20 @@ class Network:
                 self.update_batch(batch_data, batch_label, rate)
             sys.stdout.write("\033[K")
             self.log.info("Epoch {0}: {1}/{1}, Time: {2:>10.5}s".format(epoch, len(batch_datas), time.time() - stime))
-            acc = self.evaluate(data=validation_data, labels=validation_labels)
-            self.log.info("Accuuracy {:.4}".format(acc))
+
+            # calculate acc and losses
+            val_acc = self.evaluate(data=validation_data, labels=validation_labels)
+            val_loss = self.total_loss(data=validation_data, labels=validation_labels)
+            acc = self.evaluate(data=train_data, labels=train_labels)
+            loss = self.total_loss(data=train_data, labels=train_labels)
+
+            # save into history
+            val_accuracy_hist.append(val_acc)
+            val_loss_hist.append(val_loss)
+            training_accuracy_hist.append(acc)
+            training_loss_hist.append(loss)
+            
+            self.log.info("accuracy: {0:.4} - loss: {1:.4} - val_accuracy: {2:.4} - val_loss: {2:.4}".format(acc, loss, val_acc, val_loss))
 
     def update_batch(self, batch_data, batch_label, rate):
 
@@ -184,3 +196,10 @@ class Network:
     def evaluate(self, data=None, labels=None):
         res = [ (np.argmax(self.feed_forward(x)), np.argmax(y)) for x, y in zip(data, labels) ]
         return sum( int(y1 == y0) for (y1, y0) in res ) / len(data)
+
+    def total_loss(self, data=None, labels=None):
+        loss = 0.0
+        for x, y in zip(data, labels):
+            loss += self.cost.fn(self.feed_forward(x), y)
+
+        return loss / len(data)
