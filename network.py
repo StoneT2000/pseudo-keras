@@ -78,7 +78,9 @@ class Network:
               batch_size=None,
               lmbda=0.0,
               rate=0.5,
-              validation_split=0.1):
+              validation_split=0.1,
+              tf_writer=None
+              ):
         """
         performs SGD. Expects numpy arrays
         """
@@ -129,6 +131,13 @@ class Network:
             training_loss_hist.append(loss)
             
             self.log.info("accuracy: {0:.4} - loss: {1:.4} - val_accuracy: {2:.4} - val_loss: {2:.4}".format(acc, loss, val_acc, val_loss))
+            if tf_writer:
+                with tf_writer.as_default():
+                    tf.summary.scalar('accuracy', acc, step=epoch)
+                    tf.summary.scalar('loss', loss, step=epoch)
+                    tf.summary.scalar('val_accuracy', val_acc, step=epoch)
+                    tf.summary.scalar('val_loss', val_loss, step=epoch)
+                    tf_writer.flush()
 
     def update_batch(self, batch_data, batch_label, rate):
 

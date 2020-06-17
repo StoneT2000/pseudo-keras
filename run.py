@@ -19,12 +19,18 @@ test_data = test_data.reshape(len(test_data), 784, 1)
 # one hot encode data
 train_labels = tf.keras.utils.to_categorical(train_labels, 10).reshape(len(train_labels), 10, 1)
 test_labels = tf.keras.utils.to_categorical(test_labels, 10).reshape(len(test_labels), 10, 1)
-acc = net.evaluate(data=test_data, labels=test_labels)
-print(acc)
+
+# setup a writer to use tensorboard
+writer = tf.summary.create_file_writer("./nn-logs")
+
 net.train(train_data=train_data,
           train_labels=train_labels,
           epochs=4,
           batch_size=32,
-          validation_split=0.2)
+          validation_split=0.2,
+          tf_writer=writer
+          )
 acc = net.evaluate(data=test_data, labels=test_labels)
 print(acc)
+
+writer.close()
